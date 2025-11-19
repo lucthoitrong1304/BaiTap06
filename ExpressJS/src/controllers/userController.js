@@ -6,6 +6,8 @@ const {
   resetPasswordService,
 } = require("../services/userService");
 
+const { validateRegister, validateLogin } = require("../validators/authValidators");
+
 const createUser = async (req, res) => {
   const { name, email, password } = req.body;
   const data = await createUserService(name, email, password);
@@ -34,7 +36,7 @@ const handleForgotPassword = async (req, res) => {
   }
   const data = await forgotPasswordService(email);
   return res.status(200).json(data);
-}
+};
 
 const handleResetPassword = async (req, res) => {
   const { token, password } = req.body;
@@ -43,7 +45,7 @@ const handleResetPassword = async (req, res) => {
   }
   const data = await resetPasswordService(token, password);
   return res.status(200).json(data);
-}
+};
 
 module.exports = {
   createUser,
@@ -51,5 +53,7 @@ module.exports = {
   getUser,
   getAccount,
   handleForgotPassword,
-  handleResetPassword
+  handleResetPassword,
+  validateRegister,
+  validateLogin,
 };

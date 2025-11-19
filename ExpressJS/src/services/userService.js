@@ -55,6 +55,7 @@ const loginService = async (emaill, password) => {
         const payload = {
           email: user.email,
           name: user.name,
+          role: user.role,
         };
 
         const access_token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -70,6 +71,7 @@ const loginService = async (emaill, password) => {
             user: {
               email: user.email,
               name: user.name,
+              role: user.role,
             },
           },
         };

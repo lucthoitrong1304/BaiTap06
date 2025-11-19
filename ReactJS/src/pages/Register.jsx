@@ -1,37 +1,37 @@
 import React, { useState } from "react";
-import { registerUser } from "../services/api";
+import { Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { registerUser } from "../services/api.js";
 import { toast } from "react-hot-toast";
-import { Link } from "react-router-dom"; // Giả sử bạn có trang Login
 
 const Register = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!name || !email || !password) {
-      toast.error("Vui lòng điền đầy đủ thông tin.");
-      return;
-    }
-
+  const onSubmit = async (data) => {
+    // Bật trạng thái loading
     setIsLoading(true);
-    try {
-      const response = await registerUser(name, email, password);
-      const data = response.data;
 
-      if (data.EC === 0) {
-        toast.success("Đăng ký thành công!");
-        setName("");
-        setEmail("");
-        setPassword("");
-      } else {
-        toast.error(data.EM);
+    try {
+      const response = await registerUser(data.name, data.email, data.password);
+      const apiData = response.data;
+
+      if (apiData.EC === 0) {
+        toast.success("Đăng ký tài khoản thành công!");
+      } else if (apiData.EC === 1) {
+        toast.error(apiData.EM); // Hiển thị "Email đã tồn tại"
+      } else if (apiData.EC === -1) {
+        toast.error("Lỗi hệ thống, vui lòng thử lại sau.");
+        console.error("Lỗi server:", apiData.DT);
       }
     } catch (error) {
-      console.error("Lỗi đăng ký:", error);
-      toast.error("Có lỗi xảy ra, vui lòng thử lại.");
+      console.error("Lỗi khi gọi API đăng ký:", error);
+      toast.error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.");
     } finally {
       setIsLoading(false);
     }
@@ -43,7 +43,8 @@ const Register = () => {
         <h2 className="mb-6 text-center text-3xl font-bold text-gray-900">
           Đăng Ký Tài Khoản
         </h2>
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          {/* Trường Họ và Tên */}
           <div className="mb-4">
             <label
               htmlFor="name"
@@ -54,12 +55,18 @@ const Register = () => {
             <input
               type="text"
               id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              {...register("name", { required: true })}
+              aria-invalid={errors.name ? "true" : "false"}
               className="w-full rounded-md border border-gray-300 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
             />
+            {errors.name?.type === "required" && (
+              <span className="mt-1 block text-sm font-semibold text-red-600">
+                Vui lòng nhập Họ và Tên.
+              </span>
+            )}
           </div>
+
+          {/* Trường Email */}
           <div className="mb-4">
             <label
               htmlFor="email"
@@ -70,12 +77,24 @@ const Register = () => {
             <input
               type="email"
               id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              {...register("email", {
+                required: "Vui lòng nhập Email.",
+                pattern: {
+                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+                  message: "Email không hợp lệ.",
+                },
+              })}
+              aria-invalid={errors.email ? "true" : "false"}
               className="w-full rounded-md border border-gray-300 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
             />
+            {errors.email && (
+              <span className="mt-1 block text-sm font-semibold text-red-600">
+                {errors.email.message}
+              </span>
+            )}
           </div>
+
+          {/* Trường Mật khẩu */}
           <div className="mb-6">
             <label
               htmlFor="password"
@@ -86,22 +105,42 @@ const Register = () => {
             <input
               type="password"
               id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              {...register("password", {
+                required: "Vui lòng nhập Mật khẩu.",
+                minLength: {
+                  value: 8,
+                  message: "Mật khẩu phải có ít nhất 8 ký tự.",
+                },
+                // Quy tắc Regex mới
+                pattern: {
+                  value: /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.*[a-z]).{8,}$/,
+                  message:
+                    "Mật khẩu phải có ít nhất 8 ký tự, bao gồm: 1 chữ hoa, 1 chữ thường và 1 ký tự đặc biệt (!@#$%^&*).",
+                },
+              })}
+              aria-invalid={errors.password ? "true" : "false"}
               className="w-full rounded-md border border-gray-300 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
             />
+            {errors.password && (
+              <span className="mt-1 block text-sm font-semibold text-red-600">
+                {errors.password.message}
+              </span>
+            )}
           </div>
+
+          {/* Nút Submit */}
           <div>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex w-full cursor-pointer justify-center rounded-md bg-blue-600 px-3 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? "Đang xử lý..." : "Đăng Ký"}
             </button>
           </div>
         </form>
+
+        {/* Liên kết Đăng nhập */}
         <p className="mt-6 text-center text-sm text-gray-500">
           Đã có tài khoản?{" "}
           <Link

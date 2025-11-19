@@ -6,17 +6,21 @@ const {
   getAccount,
   handleForgotPassword,
   handleResetPassword,
+  validateRegister,
+  validateLogin,
 } = require("../controllers/userController");
 
 const auth = require("../middleware/auth");
+const authorize = require("../middleware/authorize");
 const delay = require("../middleware/delay");
+const apiLimiter = require("../middleware/rateLimiter");
 
 const routerAPI = express.Router();
 
-routerAPI.post("/register", createUser);
-routerAPI.post("/login", handleLogin);
-routerAPI.post("/forgot-password", handleForgotPassword);
-routerAPI.post("/reset-password", handleResetPassword);
+routerAPI.post("/register", apiLimiter, ...validateRegister, createUser);
+routerAPI.post("/login", apiLimiter, ...validateLogin, handleLogin);
+routerAPI.post("/forgot-password", apiLimiter, handleForgotPassword);
+routerAPI.post("/reset-password", apiLimiter, handleResetPassword);
 
 routerAPI.get("/", (req, res) => {
   return res.status(200).json("Lục Thới Trọng - 22110254");
@@ -24,7 +28,7 @@ routerAPI.get("/", (req, res) => {
 
 routerAPI.use(auth);
 
-routerAPI.get("/user", getUser);
-routerAPI.get("/account", delay, getAccount);
+routerAPI.get("/user", authorize("Admin"), getUser);
+routerAPI.get("/account", authorize(["Admin", "User"]), delay, getAccount);
 
 module.exports = routerAPI;
