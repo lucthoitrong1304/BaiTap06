@@ -41,7 +41,7 @@ routerAPI.get(
   getChatHistories
 );
 routerAPI.get(
-  "/g/:chatHistoryId",
+  "/chat-histories/:chatHistoryId",
   authorize(["Admin", "User"]), // Chỉ cho phép Admin và User truy cập
   getChatDetail
 );
