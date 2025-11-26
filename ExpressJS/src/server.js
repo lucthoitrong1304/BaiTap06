@@ -1,28 +1,34 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const User = require('./models/user');
-const {sequelize, connection} = require('./config/database');
+const { sequelize, connection } = require('./config/database');
 const apiRoutes = require('./routes/api');
+
+const { initIndex } = require('./services/elasticService');
+
 const app = express();
 const port = process.env.PORT || 8888;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use('/v1/api/', apiRoutes);
 
 (async () => {
-    try {
-        await connection();
+  try {
+    // Kết nối MySQL
+    await connection();
 
-        await sequelize.sync();
-        console.log("All models were synchronized successfully.");
+    await sequelize.sync();
+    console.log("✅ All models were synchronized successfully.");
 
-        app.listen(port, () => {
-            console.log(`✅ Backend Nodejs App listening on port ${port}`);
-        });
-    } catch (error) {
-        console.log(">>> Error connecting to DB or syncing models: ", error);
-    }
+    // 2. KHỞI TẠO INDEX ELASTICSEARCH
+    await initIndex();
+
+    app.listen(port, () => {
+      console.log(`✅ Backend Nodejs App listening on port ${port}`);
+    });
+  } catch (error) {
+    console.log(">>> Error connecting to DB or syncing models: ", error);
+  }
 })();
