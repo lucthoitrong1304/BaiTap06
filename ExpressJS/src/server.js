@@ -4,8 +4,6 @@ const cors = require('cors');
 const { sequelize, connection } = require('./config/database');
 const apiRoutes = require('./routes/api');
 
-const { initIndex } = require('./services/elasticService');
-
 const app = express();
 const port = process.env.PORT || 8888;
 
@@ -21,9 +19,6 @@ app.use('/v1/api/', apiRoutes);
 
     await sequelize.sync();
     console.log("✅ All models were synchronized successfully.");
-
-    // 2. KHỞI TẠO INDEX ELASTICSEARCH
-    await initIndex();
 
     app.listen(port, () => {
       console.log(`✅ Backend Nodejs App listening on port ${port}`);

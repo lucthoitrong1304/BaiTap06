@@ -1,8 +1,6 @@
-// middleware/rateLimiter.js
-
 const rateLimit = require("express-rate-limit");
 
-const apiLimiter = rateLimit({
+const authLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 5, // Giới hạn 5 request mỗi IP trong 1 phút
   standardHeaders: true, // Thêm header RateLimit
@@ -17,4 +15,20 @@ const apiLimiter = rateLimit({
   }
 });
 
-module.exports = apiLimiter;
+// 2. Limiter thoáng cho Public (Xem sản phẩm, danh mục...)
+const publicLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 phút
+  max: 60, // Cho phép 60 request/phút (trung bình 1 giây 1 cái -> thoải mái lướt)
+  message: {
+    EC: 4,
+    EM: "Bạn gửi quá nhiều yêu cầu, vui lòng chậm lại.",
+    DT: ""
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+module.exports = {
+  authLimiter,
+  publicLimiter
+};
